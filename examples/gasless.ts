@@ -1,4 +1,4 @@
-import { Api, TonApiClient } from '@ton-api/client';
+tabimport { Api, TonApiClient } from '@ton-api/client';
 import { storeMessageRelaxed, WalletContractV5R1 } from '@ton/ton';
 import { Address, beginCell, internal, toNano, SendMode, external, storeMessage } from '@ton/core';
 import { mnemonicToPrivateKey } from '@ton/crypto';
@@ -13,7 +13,7 @@ const OP_CODES = {
     JETTON_TRANSFER: 0xf8a7ea5
 };
 
-// Amount for jetton transfer. Usually 0.05 TON is enough for most jetton transfers without forwardBody
+esc// Amount for jetton transfer. Usually 0.05 TON is enough for most jetton transfers without forwardBody
 const BASE_JETTON_SEND_AMOUNT = toNano(0.05);
 
 const main = async () => {
@@ -42,7 +42,7 @@ const main = async () => {
 
     const relayerAddress = await printConfigAndReturnRelayAddress();
 
-    // Create payload for jetton transfer
+   tab // Create payload for jetton transfer
     const tetherTransferPayload = beginCell()
         .storeUint(OP_CODES.JETTON_TRANSFER, 32)
         .storeUint(0, 64)
