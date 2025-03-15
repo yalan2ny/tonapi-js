@@ -3512,21 +3512,22 @@ class HttpClient {
                 body: typeof body === 'undefined' || body === null ? null : payloadFormatter(body)
             }
         ).then(async response => {
-            const r = response.clone() as HttpResponse<T, E>;
+            const r = response as HttpResponse<T, E>;
             r.data = null as unknown as T;
             r.error = null as unknown as E;
 
             const customResponseFormat = responseFormat === 'json' ? 'text' : responseFormat;
 
-            const data = !customResponseFormat
+            const result = !customResponseFormat
                 ? r
                 : await response[customResponseFormat!]()
                       .then(data => {
                           if (r.ok) {
                               r.data = responseFormat === 'json' ? JSONParse(data as string) : data;
-                          } else {
-                              r.error = data as E;
+                              return r;
                           }
+                          r.error = data as E;
+
                           return r;
                       })
                       .catch(e => {
@@ -3538,8 +3539,8 @@ class HttpClient {
                 this.abortControllers.delete(cancelToken);
             }
 
-            if (!response.ok) throw data;
-            return data.data;
+            if (!response.ok) throw result;
+            return result.data;
         });
     };
 }
