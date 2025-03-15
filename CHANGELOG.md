@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - **Memory Leak**: Fixed a memory leak caused by the `clone` method in API requests, enhancing performance and stability. (https://github.com/tonkeeper/tonapi-js/issues/212)
 - **Query Parameter Handling**: add support for `explode: false` in query parameters, ensuring accurate API request generation. (https://github.com/tonkeeper/tonapi-js/issues/221)
 
+### Improved
+- **Error Handling**: Changed priority of error handling to ensure that the error message is returned, if available, instead of the error code. This change provides more context to the user and helps in debugging.
+
 ## [0.3.1] - 2025-01-09
 
 ### Added
