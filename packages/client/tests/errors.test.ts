@@ -82,5 +82,7 @@ test('should handle a JSON error response without an error field', async () => {
     const mockError = { message: 'Some error without error field' };
     fetchMock.mockResponseOnce(JSON.stringify(mockError), { status: 400 });
 
-    await expect(ta.utilities.status()).rejects.toThrow('Unknown error');
+    await expect(ta.utilities.status()).rejects.toThrow(
+        `Wrong error response: {\"message\":\"Some error without error field\"}`
+    );
 });

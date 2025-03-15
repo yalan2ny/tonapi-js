@@ -3363,7 +3363,7 @@ class HttpClient {
         const headers = {
             ...(baseApiParams.headers ?? {}),
             ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
-            'x-tonapi-client': `tonapi-js@0.4.0-beta.0`
+            'x-tonapi-client': `tonapi-js@0.3.1`
         };
 
         const preparedApiConfig = {
@@ -5800,21 +5800,22 @@ function parseHexToBigInt(str: string) {
 async function prepareResponse<U>(promise: Promise<any>, orSchema?: any): Promise<U> {
     return await promise
         .then(obj => prepareResponseData<U>(obj, orSchema))
-        .catch(async error => {
-            let errorMessage: string;
+        .catch(async response => {
+            let errorMessage: string = 'Unknown error occurred';
 
-            if (
-                error &&
-                typeof error === 'object' &&
-                'json' in error &&
-                typeof error.json === 'function'
+            if (response instanceof Error) {
+                errorMessage = response.message || 'Unknown fetch error';
+            } else if (
+                response &&
+                typeof response === 'object' &&
+                typeof response.error === 'string'
             ) {
                 try {
-                    const errorJson = await error.json();
+                    const errorJson = JSONParse(response.error);
                     errorMessage =
                         typeof errorJson === 'string'
                             ? errorJson
-                            : (errorJson?.error as string) || 'Unknown error';
+                            : errorJson?.error || `Wrong error response: ${response.error}`;
                 } catch (jsonParseError: unknown) {
                     if (jsonParseError instanceof Error) {
                         errorMessage = `Failed to parse error response: ${jsonParseError.message}`;
@@ -5822,13 +5823,9 @@ async function prepareResponse<U>(promise: Promise<any>, orSchema?: any): Promis
                         errorMessage = 'Failed to parse error response: Unknown parsing error';
                     }
                 }
-            } else if (error instanceof Error) {
-                errorMessage = error.message || 'Unknown error without JSON';
-            } else {
-                errorMessage = 'Unknown error occurred';
             }
 
-            throw new Error(errorMessage, { cause: error });
+            throw new Error(errorMessage, { cause: response });
         });
 }
 
