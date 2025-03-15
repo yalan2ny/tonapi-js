@@ -3512,22 +3512,21 @@ class HttpClient {
                 body: typeof body === 'undefined' || body === null ? null : payloadFormatter(body)
             }
         ).then(async response => {
-            const r = response as HttpResponse<T, E>;
+            const r = response.clone() as HttpResponse<T, E>;
             r.data = null as unknown as T;
             r.error = null as unknown as E;
 
             const customResponseFormat = responseFormat === 'json' ? 'text' : responseFormat;
 
-            const result = !customResponseFormat
+            const data = !customResponseFormat
                 ? r
                 : await response[customResponseFormat!]()
                       .then(data => {
                           if (r.ok) {
                               r.data = responseFormat === 'json' ? JSONParse(data as string) : data;
-                              return r;
+                          } else {
+                              r.error = data as E;
                           }
-                          r.error = data as E;
-
                           return r;
                       })
                       .catch(e => {
@@ -3539,8 +3538,8 @@ class HttpClient {
                 this.abortControllers.delete(cancelToken);
             }
 
-            if (!response.ok) throw result;
-            return result.data;
+            if (!response.ok) throw data;
+            return data.data;
         });
     };
 }
@@ -5801,22 +5800,21 @@ function parseHexToBigInt(str: string) {
 async function prepareResponse<U>(promise: Promise<any>, orSchema?: any): Promise<U> {
     return await promise
         .then(obj => prepareResponseData<U>(obj, orSchema))
-        .catch(async response => {
-            let errorMessage: string = 'Unknown error occurred';
+        .catch(async error => {
+            let errorMessage: string;
 
-            if (response instanceof Error) {
-                errorMessage = response.message || 'Unknown fetch error';
-            } else if (
-                response &&
-                typeof response === 'object' &&
-                typeof response.error === 'string'
+            if (
+                error &&
+                typeof error === 'object' &&
+                'json' in error &&
+                typeof error.json === 'function'
             ) {
                 try {
-                    const errorJson = JSONParse(response.error);
+                    const errorJson = await error.json();
                     errorMessage =
                         typeof errorJson === 'string'
                             ? errorJson
-                            : errorJson?.error || `Wrong error response: ${response.error}`;
+                            : (errorJson?.error as string) || 'Unknown error';
                 } catch (jsonParseError: unknown) {
                     if (jsonParseError instanceof Error) {
                         errorMessage = `Failed to parse error response: ${jsonParseError.message}`;
@@ -5824,9 +5822,13 @@ async function prepareResponse<U>(promise: Promise<any>, orSchema?: any): Promis
                         errorMessage = 'Failed to parse error response: Unknown parsing error';
                     }
                 }
+            } else if (error instanceof Error) {
+                errorMessage = error.message || 'Unknown error without JSON';
+            } else {
+                errorMessage = 'Unknown error occurred';
             }
 
-            throw new Error(errorMessage, { cause: response });
+            throw new Error(errorMessage, { cause: error });
         });
 }
 
