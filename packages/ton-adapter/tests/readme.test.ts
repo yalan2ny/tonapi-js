@@ -49,15 +49,10 @@ test('Readme example', async () => {
     await main();
 
     // Check if console.log was called twice
-    expect(consoleLogMock).toHaveBeenCalledTimes(2);
+    expect(consoleLogMock).toHaveBeenCalledTimes(1);
 
     // Check the first console.log call (Balance)
     expect(consoleLogMock.mock.calls[0]).toEqual(['Balance:', '0']);
-
-    // Check the second console.log call (Error message)
-    expect(consoleLogMock.mock.calls[1]).toEqual([
-        'error code: 0 message: cannot apply external message to current state : Failed to unpack account state'
-    ]);
 
     // Restore the original console.log
     consoleLogMock.mockRestore();

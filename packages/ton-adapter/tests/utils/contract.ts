@@ -42,7 +42,7 @@ export class WalletItem implements Contract {
             'get_public_key'
         );
         const workchain = address.workChain;
-        const publicKey = BigInt(accountData.decoded.publicKey);
+        const publicKey = BigInt(accountData.decoded.public_key);
         const bufferPublicKey = Buffer.from(publicKey.toString(16), 'hex');
 
         return new WalletItem(address, workchain, bufferPublicKey).walletContract;
