@@ -9,6 +9,8 @@
 For a detailed view of all methods and endpoints in a Swagger format, refer to the [Swagger documentation](https://tonapi.io/api-v2)
 For detailed API information and endpoint descriptions, please refer to the [official documentation](https://docs.tonconsole.com/tonapi/rest-api) or check the [Swagger UI](https://tonapi.io/api-v2) for an interactive method list.
 
+For usage examples, check the [TonAPI Cookbook](https://docs.tonconsole.com/tonapi/cookbook).
+
 ## Features
 
 - Full coverage of tonapi.io endpoints

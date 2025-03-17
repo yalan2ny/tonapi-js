@@ -12,8 +12,8 @@
       "ESNext",
       "dom"
     ],
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "target": "ES2022",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,

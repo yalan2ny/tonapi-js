@@ -1426,7 +1426,7 @@ export interface JettonPreview {
     verification: JettonVerificationType;
     customPayloadApiUri?: string;
     /** @format int32 */
-    score?: number;
+    score: number;
 }
 
 export interface JettonBalance {
@@ -1701,6 +1701,10 @@ export interface TonTransferAction {
     comment?: string;
     encryptedComment?: EncryptedComment;
     refund?: Refund;
+}
+
+export interface ExtraCurrencies {
+    extraCurrencies: EcPreview[];
 }
 
 export interface EcPreview {
@@ -2472,8 +2476,6 @@ export interface JettonInfo {
      * @example 2000
      */
     holdersCount: number;
-    /** @format int32 */
-    score?: number;
 }
 
 export interface JettonHolders {
@@ -2659,6 +2661,7 @@ export interface FoundAccounts {
         name: string;
         /** @example "https://cache.tonapi.io/images/media.jpg" */
         preview: string;
+        trust: TrustType;
     }[];
 }
 
@@ -2910,6 +2913,8 @@ export interface GetAccountDiffData {
     balanceChange: number;
 }
 
+export type GetAccountExtraCurrencyHistoryByIdData = AccountEvents;
+
 export type GetDnsInfoData = DomainInfo;
 
 export type DnsResolveData = DnsRecord;
@@ -2960,6 +2965,8 @@ export type GetJettonHoldersData = JettonHolders;
 export type GetJettonTransferPayloadData = JettonTransferPayload;
 
 export type GetJettonsEventsData = Event;
+
+export type GetExtraCurrencyInfoData = EcPreview;
 
 export type GetAccountNominatorsPoolsData = AccountStaking;
 
@@ -3256,6 +3263,8 @@ export interface FullRequestParams extends Omit<RequestInit, 'body'> {
     type?: ContentType;
     /** query params */
     query?: QueryParamsType;
+    /** query implode */
+    queryImplode?: string[];
     /** format of response (i.e. response.json() -> format: "json") */
     format?: ResponseFormat;
     /** request body */
@@ -3354,7 +3363,7 @@ class HttpClient {
         const headers = {
             ...(baseApiParams.headers ?? {}),
             ...(apiKey ? { Authorization: `Bearer ${apiKey}` } : {}),
-            'x-tonapi-client': `tonapi-js@0.3.1`
+            'x-tonapi-client': `tonapi-js@0.4.0`
         };
 
         const preparedApiConfig = {
@@ -3378,18 +3387,28 @@ class HttpClient {
         return this.encodeQueryParam(key, query[key]);
     }
 
-    protected addArrayQueryParam(query: QueryParamsType, key: string) {
-        const value = query[key];
-        return value.map((v: any) => this.encodeQueryParam(key, v)).join('&');
+    protected addImplodeArrayQueryParam(query: QueryParamsType, key: string) {
+        const value = query[key]
+            .map((val: any) => encodeURIComponent(typeof val === 'number' ? val : `${val}`))
+            .join(',');
+
+        return this.encodeQueryParam(key, value);
     }
 
-    protected toQueryString(rawQuery?: QueryParamsType): string {
+    protected addArrayQueryParam(query: QueryParamsType, key: string, implodeParams?: string[]) {
+        const value = query[key];
+        return implodeParams?.includes(key)
+            ? this.addImplodeArrayQueryParam(query, key)
+            : value.map((v: any) => this.encodeQueryParam(key, v)).join('&');
+    }
+
+    protected toQueryString(rawQuery?: QueryParamsType, implodeParams?: string[]): string {
         const query = rawQuery || {};
         const keys = Object.keys(query).filter(key => 'undefined' !== typeof query[key]);
         return keys
             .map(key =>
                 Array.isArray(query[key])
-                    ? this.addArrayQueryParam(query, key)
+                    ? this.addArrayQueryParam(query, key, implodeParams)
                     : this.addQueryParam(query, key)
             )
             .join('&');
@@ -3465,13 +3484,14 @@ class HttpClient {
         path,
         type,
         query,
+        queryImplode,
         format,
         baseUrl,
         cancelToken,
         ...params
     }: FullRequestParams): Promise<T> => {
         const requestParams = this.mergeRequestParams(params);
-        const queryString = query && this.toQueryString(query);
+        const queryString = query && this.toQueryString(query, queryImplode);
         const contentType = type ?? ContentType.Json;
         const payloadFormatter = this.contentFormatters[contentType];
         const responseFormat = format || requestParams.format;
@@ -3492,21 +3512,22 @@ class HttpClient {
                 body: typeof body === 'undefined' || body === null ? null : payloadFormatter(body)
             }
         ).then(async response => {
-            const r = response.clone() as HttpResponse<T, E>;
+            const r = response as HttpResponse<T, E>;
             r.data = null as unknown as T;
             r.error = null as unknown as E;
 
             const customResponseFormat = responseFormat === 'json' ? 'text' : responseFormat;
 
-            const data = !customResponseFormat
+            const result = !customResponseFormat
                 ? r
                 : await response[customResponseFormat!]()
                       .then(data => {
                           if (r.ok) {
                               r.data = responseFormat === 'json' ? JSONParse(data as string) : data;
-                          } else {
-                              r.error = data as E;
+                              return r;
                           }
+                          r.error = data as E;
+
                           return r;
                       })
                       .catch(e => {
@@ -3518,8 +3539,8 @@ class HttpClient {
                 this.abortControllers.delete(cancelToken);
             }
 
-            if (!response.ok) throw data;
-            return data.data;
+            if (!response.ok) throw result;
+            return result.data;
         });
     };
 }
@@ -4641,7 +4662,7 @@ const components = {
     },
     '#/components/schemas/JettonPreview': {
         type: 'object',
-        required: ['address', 'name', 'symbol', 'decimals', 'verification', 'image'],
+        required: ['address', 'name', 'symbol', 'decimals', 'verification', 'image', 'score'],
         properties: {
             address: { type: 'string', format: 'address' },
             name: { type: 'string' },
@@ -4895,6 +4916,13 @@ const components = {
             comment: { type: 'string' },
             encrypted_comment: { $ref: '#/components/schemas/EncryptedComment' },
             refund: { $ref: '#/components/schemas/Refund' }
+        }
+    },
+    '#/components/schemas/ExtraCurrencies': {
+        type: 'object',
+        required: ['extra_currencies'],
+        properties: {
+            extra_currencies: { type: 'array', items: { $ref: '#/components/schemas/EcPreview' } }
         }
     },
     '#/components/schemas/EcPreview': {
@@ -5496,8 +5524,7 @@ const components = {
             metadata: { $ref: '#/components/schemas/JettonMetadata' },
             preview: { type: 'string' },
             verification: { $ref: '#/components/schemas/JettonVerificationType' },
-            holders_count: { type: 'integer', format: 'int32' },
-            score: { type: 'integer', format: 'int32' }
+            holders_count: { type: 'integer', format: 'int32' }
         }
     },
     '#/components/schemas/JettonHolders': {
@@ -5614,11 +5641,12 @@ const components = {
                 type: 'array',
                 items: {
                     type: 'object',
-                    required: ['address', 'name', 'preview'],
+                    required: ['address', 'name', 'preview', 'trust'],
                     properties: {
                         address: { type: 'string', format: 'address' },
                         name: { type: 'string' },
-                        preview: { type: 'string' }
+                        preview: { type: 'string' },
+                        trust: { $ref: '#/components/schemas/TrustType' }
                     }
                 }
             }
@@ -5773,21 +5801,22 @@ function parseHexToBigInt(str: string) {
 async function prepareResponse<U>(promise: Promise<any>, orSchema?: any): Promise<U> {
     return await promise
         .then(obj => prepareResponseData<U>(obj, orSchema))
-        .catch(async error => {
-            let errorMessage: string;
+        .catch(async response => {
+            let errorMessage: string = 'Unknown error occurred';
 
-            if (
-                error &&
-                typeof error === 'object' &&
-                'json' in error &&
-                typeof error.json === 'function'
+            if (response instanceof Error) {
+                errorMessage = response.message || 'Unknown fetch error';
+            } else if (
+                response &&
+                typeof response === 'object' &&
+                typeof response.error === 'string'
             ) {
                 try {
-                    const errorJson = await error.json();
+                    const errorJson = JSONParse(response.error);
                     errorMessage =
                         typeof errorJson === 'string'
                             ? errorJson
-                            : (errorJson?.error as string) || 'Unknown error';
+                            : errorJson?.error || `Wrong error response: ${response.error}`;
                 } catch (jsonParseError: unknown) {
                     if (jsonParseError instanceof Error) {
                         errorMessage = `Failed to parse error response: ${jsonParseError.message}`;
@@ -5795,13 +5824,9 @@ async function prepareResponse<U>(promise: Promise<any>, orSchema?: any): Promis
                         errorMessage = 'Failed to parse error response: Unknown parsing error';
                     }
                 }
-            } else if (error instanceof Error) {
-                errorMessage = error.message || 'Unknown error without JSON';
-            } else {
-                errorMessage = 'Unknown error occurred';
             }
 
-            throw new Error(errorMessage, { cause: error });
+            throw new Error(errorMessage, { cause: response });
         });
 }
 
@@ -5882,15 +5907,26 @@ function prepareResponseData<U>(obj: any, orSchema?: any): U {
         }
     }
 
-    // case of non tuple-item object
+    // Case of non tuple-item object
     if (obj !== null && typeof obj === 'object') {
         return Object.keys(obj).reduce(
             (acc, key) => {
-                const objSchema = schema?.properties && schema.properties[key];
+                if (!schema) {
+                    // If schema is undefined, do not convert keys
+                    acc[key] = prepareResponseData(obj[key], undefined);
+                    return acc;
+                }
 
-                const camelCaseKey = snakeToCamel(key);
+                const objSchema = schema.properties && schema.properties[key];
+                const isDefinedProperty = !!objSchema;
 
-                acc[camelCaseKey] = prepareResponseData(obj[key], objSchema);
+                // Only convert to camelCase if it's a defined property
+                const camelCaseKey = isDefinedProperty ? snakeToCamel(key) : key;
+
+                // Use the specific property schema or the additionalProperties schema
+                const propertySchema = isDefinedProperty ? objSchema : schema.additionalProperties;
+
+                acc[camelCaseKey] = prepareResponseData(obj[key], propertySchema);
                 return acc;
             },
             {} as Record<string, unknown>
@@ -6435,7 +6471,7 @@ export class TonApiClient {
             data: {
                 /** @format cell */
                 boc?: Cell;
-                /** @maxItems 10 */
+                /** @maxItems 5 */
                 batch?: Cell[];
                 meta?: Record<string, string>;
             },
@@ -6450,7 +6486,7 @@ export class TonApiClient {
                         boc: { type: 'string', format: 'cell' },
                         batch: {
                             type: 'array',
-                            maxItems: 10,
+                            maxItems: 5,
                             items: { type: 'string', format: 'cell' }
                         },
                         meta: { type: 'object', additionalProperties: { type: 'string' } }
@@ -6646,6 +6682,7 @@ export class TonApiClient {
                 path: `/v2/accounts/${accountId}/jettons`,
                 method: 'GET',
                 query: query,
+                queryImplode: ['currencies', 'supported_extensions'],
                 format: 'json',
                 ...params
             });
@@ -6685,6 +6722,7 @@ export class TonApiClient {
                 path: `/v2/accounts/${accountId}/jettons/${jettonId}`,
                 method: 'GET',
                 query: query,
+                queryImplode: ['currencies', 'supported_extensions'],
                 format: 'json',
                 ...params
             });
@@ -6902,6 +6940,7 @@ export class TonApiClient {
                 path: `/v2/accounts/${accountId}/events`,
                 method: 'GET',
                 query: query,
+                queryImplode: ['initiator'],
                 format: 'json',
                 ...params
             });
@@ -7168,6 +7207,58 @@ export class TonApiClient {
                 type: 'object',
                 required: ['balance_change'],
                 properties: { balance_change: { type: 'integer', format: 'int64' } }
+            });
+        },
+
+        /**
+         * @description Get the transfer history of extra currencies for an account.
+         *
+         * @tags Accounts
+         * @name GetAccountExtraCurrencyHistoryById
+         * @request GET:/v2/accounts/{account_id}/extra-currency/{id}/history
+         */
+        getAccountExtraCurrencyHistoryById: (
+            accountId_Address: Address,
+            id: number,
+            query: {
+                /**
+                 * omit this parameter to get last events
+                 * @format bigint
+                 * @example 25758317000002
+                 */
+                before_lt?: bigint;
+                /**
+                 * @min 1
+                 * @max 1000
+                 * @example 100
+                 */
+                limit: number;
+                /**
+                 * @format int64
+                 * @max 2114380800
+                 * @example 1668436763
+                 */
+                start_date?: number;
+                /**
+                 * @format int64
+                 * @max 2114380800
+                 * @example 1668436763
+                 */
+                end_date?: number;
+            },
+            params: RequestParams = {}
+        ) => {
+            const accountId = accountId_Address.toRawString();
+            const req = this.http.request<GetAccountExtraCurrencyHistoryByIdData, Error>({
+                path: `/v2/accounts/${accountId}/extra-currency/${id}/history`,
+                method: 'GET',
+                query: query,
+                format: 'json',
+                ...params
+            });
+
+            return prepareResponse<GetAccountExtraCurrencyHistoryByIdData>(req, {
+                $ref: '#/components/schemas/AccountEvents'
             });
         },
 
@@ -7961,6 +8052,27 @@ export class TonApiClient {
             });
         }
     };
+    extraCurrency = {
+        /**
+         * @description Get extra currency info by id
+         *
+         * @tags ExtraCurrency
+         * @name GetExtraCurrencyInfo
+         * @request GET:/v2/extra-currency/{id}
+         */
+        getExtraCurrencyInfo: (id: number, params: RequestParams = {}) => {
+            const req = this.http.request<GetExtraCurrencyInfoData, Error>({
+                path: `/v2/extra-currency/${id}`,
+                method: 'GET',
+                format: 'json',
+                ...params
+            });
+
+            return prepareResponse<GetExtraCurrencyInfoData>(req, {
+                $ref: '#/components/schemas/EcPreview'
+            });
+        }
+    };
     staking = {
         /**
          * @description All pools where account participates
@@ -8138,6 +8250,7 @@ export class TonApiClient {
                 path: `/v2/rates`,
                 method: 'GET',
                 query: query,
+                queryImplode: ['tokens', 'currencies'],
                 format: 'json',
                 ...params
             });
@@ -8943,6 +9056,7 @@ export class TonApiClient {
                     ...query,
                     account_id: query.account_id?.toRawString()
                 },
+                queryImplode: ['account_id'],
                 format: 'json',
                 ...params
             });
