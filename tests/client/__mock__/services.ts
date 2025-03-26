@@ -1,6 +1,4 @@
-import { JSONStringify } from '../utils/jsonbig';
-
-export const getAccounts = JSONStringify({
+export const getAccounts = {
     accounts: [
         {
             address: 'EQCae11h9N5znylEPRjmuLYGvIwnxkcCw4zVW4BJjVASi8pO',
@@ -21,9 +19,9 @@ export const getAccounts = JSONStringify({
             isWallet: true
         }
     ]
-});
+};
 
-export const getChartRates = JSONStringify({
+export const getChartRates = {
     points: [
         [1736354363, 105.25219366666667],
         [1736354363, 105.25219366666667],
@@ -126,9 +124,9 @@ export const getChartRates = JSONStringify({
         [1735986615, 110.47635555226437],
         [1735982890, 110.47636566666667]
     ]
-});
+};
 
-export const getRates = JSONStringify({
+export const getRates = {
     rates: {
         TON: {
             prices: {
@@ -167,9 +165,9 @@ export const getRates = JSONStringify({
             }
         }
     }
-});
+};
 
-export const getBlockchainBlockTransactions = JSONStringify({
+export const getBlockchainBlockTransactions = {
     transactions: [
         {
             hash: 'c42b349710ad6d30a1a63a06875439ec17a6ac1710f098c8be64d1397c9d9b62',
@@ -418,4 +416,4 @@ export const getBlockchainBlockTransactions = JSONStringify({
             raw: 'b5ee9c72010206010001320003af734517c7bdf5187c55af4f8b61fdc321588c7ab768dee24b006df29106458d7cf000006355ab75e431d05e35e9f0968fe1ab3d7844ff1741beea8bdc93f180c113db627d8aa667468000006355ab75e415edbf7cb00014080102030001200082729ded6399fb6df92fa99ffd87f5175a5c97f852236fee6ccaf5eb4643a9c25c3d2ad7b335d348d711b1d5397b626bdd3bcb3e808fd9ac9f32c4ca3a242babaa5902053030340405009e42664e625a00000000000000000030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000069600000009600000004000600000000000519ae84f17b8f8b22026a975ff55f1ab19fde4a768744d2178dfa63bb533e107a409026bc'
         }
     ]
-});
+};

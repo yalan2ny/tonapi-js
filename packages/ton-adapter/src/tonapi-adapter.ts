@@ -14,7 +14,8 @@ import {
     Transaction,
     TupleItem,
     TupleReader,
-    loadTransaction
+    loadTransaction,
+    ExtraCurrency
 } from '@ton/core';
 import {
     AccountStatus as TonApiAccountStatus,
@@ -112,8 +113,15 @@ function createProvider(
                 }
             };
 
+            const extraCurrency: ExtraCurrency | null = account.extraBalance
+                ? Object.fromEntries(
+                      Object.entries(account.extraBalance).map(([k, v]) => [Number(k), BigInt(v)])
+                  )
+                : null;
+
             return {
                 balance: account.balance,
+                extracurrency: extraCurrency,
                 last: last,
                 state: stateGetters[account.status](account)
             };
