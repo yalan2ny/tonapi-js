@@ -2,6 +2,7 @@ import { Address, TupleItemInt, WalletContractV4, internal } from '@ton/ton';
 import { mnemonicNew, mnemonicToPrivateKey } from '@ton/crypto';
 import { ContractForTestNumberArgs, WalletItem } from './utils/contract';
 import { client } from './utils/clients';
+import { test, expect } from 'vitest';
 
 // todo: mock tests
 test('Exists wallet contract', async () => {

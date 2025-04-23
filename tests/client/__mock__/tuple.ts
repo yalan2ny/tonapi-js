@@ -1,6 +1,4 @@
-import { JSONStringify } from '../utils/jsonbig';
-
-export const execGetMethodForBlockchainAccount = JSONStringify({
+export const execGetMethodForBlockchainAccount = {
     success: true,
     exit_code: 0,
     stack: [
@@ -68,4 +66,4 @@ export const execGetMethodForBlockchainAccount = JSONStringify({
             }
         ]
     }
-});
+};

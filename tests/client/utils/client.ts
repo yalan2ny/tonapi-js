@@ -1,4 +1,4 @@
-import { TonApiClient } from '../../src/client';
+import { TonApiClient } from '@ton-api/client';
 
 const baseUrl = 'https://tonapi.io';
 

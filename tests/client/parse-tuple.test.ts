@@ -1,23 +1,19 @@
 import { Address, Tuple, TupleItem } from '@ton/core';
 import { execGetMethodForBlockchainAccount } from './__mock__/tuple';
 import { ta } from './utils/client';
-import fetchMock from 'jest-fetch-mock';
+import { mockFetch } from './utils/mockFetch';
+import { test, expect, afterEach, vi } from 'vitest';
+
+afterEach(() => {
+    vi.restoreAllMocks();
+});
 
 function guardTuple(item: TupleItem): item is Tuple {
     return item.type === 'tuple';
 }
 
-beforeEach(() => {
-    fetchMock.enableMocks();
-    fetchMock.resetMocks();
-});
-
-afterAll(() => {
-    fetchMock.disableMocks();
-});
-
 test('Tuple test', async () => {
-    fetchMock.mockResponseOnce(execGetMethodForBlockchainAccount);
+    mockFetch(execGetMethodForBlockchainAccount);
 
     const addressString = 'Ef_X4pRKtgXOXYMOXNgXNRdlhkNKJ9bTKMfqvj6HDIiQG98F';
     const addressObject = Address.parse(addressString);

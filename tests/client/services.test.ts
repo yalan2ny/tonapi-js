@@ -1,19 +1,15 @@
 import { Address } from '@ton/core';
 import { ta } from './utils/client';
-import fetchMock from 'jest-fetch-mock';
 import { getChartRates, getRates } from './__mock__/services';
+import { mockFetch } from './utils/mockFetch';
+import { test, expect, afterEach, vi } from 'vitest';
 
-beforeEach(() => {
-    fetchMock.enableMocks();
-    fetchMock.resetMocks();
-});
-
-afterAll(() => {
-    fetchMock.disableMocks();
+afterEach(() => {
+    vi.restoreAllMocks();
 });
 
 test('getChartRates, should correct parse array in pair', async () => {
-    fetchMock.mockResponseOnce(getChartRates);
+    mockFetch(getChartRates);
 
     const addressString = 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs';
     const addressObject = Address.parse(addressString);
@@ -43,14 +39,12 @@ test('getChartRates, should correct parse array in pair', async () => {
 });
 
 test('getRates, additionalProperties should be not convert to camelCase', async () => {
-    fetchMock.mockResponseOnce(getRates);
+    mockFetch(getRates);
 
-    const res = await ta.rates
-        .getRates({
-            tokens: ['TON,TOKEN_WITH_UNDERSCORE'],
-            currencies: ['USD', 'EUR']
-        })
-        .then(res => res);
+    const res = await ta.rates.getRates({
+        tokens: ['TON,TOKEN_WITH_UNDERSCORE'],
+        currencies: ['USD', 'EUR']
+    });
 
     expect(res).toBeDefined();
     expect(res.rates).toBeDefined();
@@ -59,15 +53,21 @@ test('getRates, additionalProperties should be not convert to camelCase', async 
 });
 
 test('getRates, explode in params should be matter', async () => {
-    fetchMock.mockResponseOnce(getRates);
+    const fetchSpy = mockFetch(getRates);
+    // const fetchSpy = vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+    //     new Response(JSON.stringify(getRates), {
+    //         status: 200,
+    //         headers: { 'Content-Type': 'application/json' }
+    //     })
+    // );
 
     await ta.rates.getRates({
         tokens: ['TON', 'EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs'],
         currencies: ['USD', 'EUR']
     });
 
-    expect(fetchMock).toHaveBeenCalledTimes(1);
-    const url = fetchMock.mock.calls[0][0] as string;
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    const url = fetchSpy.mock.calls[0][0] as string;
     const searchParams = new URL(url).searchParams;
 
     expect(searchParams.get('tokens')).toBe('TON,EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs');

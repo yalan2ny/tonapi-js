@@ -14,7 +14,7 @@ import * as https from 'https';
 const packageVersion = process.env.npm_package_version;
 
 const openapiPath = path.resolve(process.cwd(), 'src/api.yml');
-const openapiUrl = 'https://raw.githubusercontent.com/tonkeeper/opentonapi/master/api/openapi.yml';
+const openapiUrl = 'https://tonapi.io/v2/openapi.yml';
 
 function downloadSchema(url: string, outputPath: string): Promise<void> {
     return new Promise((resolve, reject) => {

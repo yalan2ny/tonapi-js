@@ -1,6 +1,4 @@
-import { JSONStringify } from '../utils/jsonbig';
-
-export const getAccount = JSONStringify({
+export const getAccount = {
     accounts: [
         {
             address: '0:009d03ddede8c2620a72f999d03d5888102250a214bf574a29ff64df80162168',
@@ -24,9 +22,9 @@ export const getAccount = JSONStringify({
             is_wallet: false
         }
     ]
-});
+};
 
-export const getJettonInfo = JSONStringify({
+export const getJettonInfo = {
     mintable: true,
     total_supply: 1030000002000000n,
     admin: {
@@ -44,4 +42,4 @@ export const getJettonInfo = JSONStringify({
     },
     verification: 'whitelist',
     holders_count: 1734294
-});
+};

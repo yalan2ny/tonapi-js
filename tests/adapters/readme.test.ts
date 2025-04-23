@@ -2,6 +2,7 @@ import { SendMode, WalletContractV5R1, internal } from '@ton/ton';
 import { mnemonicNew, mnemonicToPrivateKey } from '@ton/crypto';
 import { TonApiClient } from '@ton-api/client';
 import { ContractAdapter } from '@ton-api/ton-adapter';
+import { test, vi, expect } from 'vitest';
 
 // Initialize TonApi client
 const ta = new TonApiClient({
@@ -44,7 +45,7 @@ async function main() {
 }
 
 test('Readme example', async () => {
-    const consoleLogMock = jest.spyOn(console, 'log').mockImplementation();
+    const consoleLogMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     await main();
 

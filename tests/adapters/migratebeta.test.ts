@@ -2,6 +2,7 @@ import { Address, Contract, ContractProvider, OpenedContract } from '@ton/ton';
 import { mnemonicNew, mnemonicToPrivateKey, KeyPair } from '@ton/crypto';
 import { ContractAdapter } from '@ton-api/ton-adapter';
 import { TonApiClient } from '@ton-api/client';
+import { test, beforeAll } from 'vitest';
 
 class NftItem implements Contract {
     constructor(public readonly address: Address) {}
@@ -31,7 +32,7 @@ const ta = new TonApiClient({
 // Create an adapter
 const contractAdapter = new ContractAdapter(ta);
 let keyPair: KeyPair; // eslint-disable-line
-let contract: OpenedContract<NftItem>;
+let contract: OpenedContract<any>;
 
 beforeAll(async () => {
     // Create wallet contract

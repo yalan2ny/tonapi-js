@@ -59,7 +59,7 @@ export class ContractForTestNumberArgs implements Contract {
     async getReferralItemAddr(provider: ContractProvider, args: TupleItem[]) {
         return await provider
             .get('get_referral_item_addr', args)
-            .catch(async res => await res.json());
+            .catch(err => console.log(err));
     }
 
     async getTransactions(provider: ContractProvider) {
