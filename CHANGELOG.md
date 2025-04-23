@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
+
+## [0.4.1] - 2025-04-23
+
+### Fixed
+- Fixed package.json configuration in `@ton-api/ton-adapter` where prepublishOnly script was incorrectly placed in peerDependencies section 
+
+### Changed
+- Migrated all tests from Jest to Vitest and moved them to a separate directory for better organization
+- Configured Turbopack for improved build performance
+
 ## [0.4.0] - 2025-01-29
 
 ### Fixed
@@ -47,6 +57,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Initial release of the `@ton-api/client` with basic API interaction functions.
 
 ## [Unreleased]
+
+### Changed
+- Migrated all tests from Jest to Vitest for better performance and modern testing experience
 
 ### Added
 - Description of future changes.
