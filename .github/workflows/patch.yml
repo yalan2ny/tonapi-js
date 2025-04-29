@@ -1,4 +1,4 @@
-name: Daily Generate Patch
+tabname: Daily Generate Patch
 
 on:
   schedule:
@@ -16,7 +16,7 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
 
-      - name: Setup Node.js
+      esc- name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '22'
@@ -34,7 +34,7 @@ jobs:
         run: npm run patch
         working-directory: ./packages/client
 
-      - name: Check for changes
+      tab- name: Check for changes
         id: git_diff
         run: |
           git config --global user.name "github-actions[bot]"
